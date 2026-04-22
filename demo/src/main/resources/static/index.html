@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emotion Analyzer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body style="background:#0f0f0f; color:white; text-align:center; font-family:sans-serif;">
+
+<h1>Emotion Analyzer 😈</h1>
+
+<input id="text" placeholder="Type your sentence..." style="padding:12px; width:300px; border-radius:8px;">
+<button onclick="analyze()" style="padding:12px; border-radius:8px;">Analyze</button>
+
+<h2 id="emoji" style="font-size:50px;"></h2>
+<p id="result"></p>
+
+<canvas id="chart" width="300"></canvas>
+
+<script>
+    let chart;
+
+    async function analyze() {
+        let text = document.getElementById("text").value;
+
+        let res = await fetch("/analyze", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({text})
+        });
+
+        let data = await res.json();
+
+        document.getElementById("result").innerText = data.explanation;
+
+        let emotions = data.emotions;
+
+        let max = Object.keys(emotions).reduce((a,b)=>emotions[a]>emotions[b]?a:b);
+
+        let emojiMap = {
+            joy: "😊",
+            anger: "😡",
+            sadness: "😢",
+            fear: "😨",
+            sarcasm: "😏",
+            neutral: "😐"
+        };
+
+        document.getElementById("emoji").innerText = emojiMap[max] || "🤔";
+
+        if(chart) chart.destroy();
+
+        chart = new Chart(document.getElementById("chart"), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(emotions),
+                datasets: [{
+                    label: "Emotion %",
+                    data: Object.values(emotions)
+                }]
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
